@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"project/xihe-statistics/infrastructure/redis"
 	"regexp"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ type Config struct {
 	HttpPort int    `json:"http_port"`
 	Duration int    `json:"duration"`
 	PGSQL    PGSQL  `json:"pgsql"`
+	Redis    Redis  `json:"redis"`
 	MQ       MQ     `json:"mq"`
 	GitLab   GitLab `json:"gitlab"`
 }
@@ -35,6 +37,10 @@ type PGSQL struct {
 	User     string `json:"user"`
 	DBName   string `json:"db_name"`
 	Password string `json:"password"`
+}
+
+type Redis struct {
+	DB redis.Config `json:"db" required:"true"`
 }
 
 type MQ struct {

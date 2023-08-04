@@ -14,6 +14,7 @@ import (
 	"project/xihe-statistics/infrastructure/gitlab"
 	"project/xihe-statistics/infrastructure/messages"
 	"project/xihe-statistics/infrastructure/pgsql"
+	"project/xihe-statistics/infrastructure/redis"
 	"project/xihe-statistics/server"
 )
 
@@ -76,11 +77,14 @@ func main() {
 		logrus.Fatalf("initialize pgsql failed, err:%s", err.Error())
 	}
 
+	if err := redis.Init(&cfg.Redis.DB); err != nil {
+		logrus.Fatalf("initialize redis failed, err:%s", err.Error())
+	}
+
 	// init kafka
 	if err := messages.Init(cfg.GetMQConfig(), log, cfg.MQ.Topics); err != nil {
 		log.Fatalf("initialize mq failed, err:%v", err)
 	}
-
 	defer messages.Exit(log)
 
 	// mq

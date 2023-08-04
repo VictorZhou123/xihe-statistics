@@ -16,6 +16,7 @@ import (
 	"project/xihe-statistics/docs"
 	"project/xihe-statistics/infrastructure/gitlab"
 	"project/xihe-statistics/infrastructure/pgsql"
+	"project/xihe-statistics/infrastructure/redis"
 	"project/xihe-statistics/infrastructure/repositories"
 )
 
@@ -43,11 +44,15 @@ func StartWebServer(port int, timeout time.Duration, cfg *config.Config) {
 	interrupts.ListenAndServe(srv, timeout)
 }
 
-//setRouter init router
+// setRouter init router
 func setRouter(engine *gin.Engine, cfg *config.Config) {
 	docs.SwaggerInfo.BasePath = "/api"
 	docs.SwaggerInfo.Title = "xihe-statistics"
 	docs.SwaggerInfo.Description = ""
+
+	access := repositories.NewAccessRepository(
+		redis.NewAccessMapper(49 * time.Hour), // TODO to config
+	)
 
 	bigModelRecord := repositories.NewBigModelRecordRepository(
 		pgsql.NewBigModelMapper(pgsql.BigModelRecord{}),
@@ -87,10 +92,8 @@ func setRouter(engine *gin.Engine, cfg *config.Config) {
 
 	platform := gitlab.NewGitlabStatistics(cfg)
 
-	// controller -> gin
 	v1 := engine.Group(docs.SwaggerInfo.BasePath)
 	{
-		// domain.repository -> app -> controller (NewxxxxService | AddxxxxController)
 		controller.AddRouterForBigModelRecordController(
 			v1, bigModelRecord,
 		)
@@ -125,6 +128,10 @@ func setRouter(engine *gin.Engine, cfg *config.Config) {
 
 		controller.AddRouterForMediaController(
 			v1, mediaRecord,
+		)
+
+		controller.AddRouterForAccessController(
+			v1, access,
 		)
 	}
 
