@@ -6,8 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opensourceways/community-robot-lib/mq"
 	"github.com/opensourceways/community-robot-lib/utils"
+	kfklib "github.com/opensourceways/kafka-lib/agent"
+	redislib "github.com/opensourceways/redis-lib"
+
+	"project/xihe-statistics/common/infrastructure/redis"
 )
 
 var reIpPort = regexp.MustCompile(`^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}:[1-9][0-9]*$`)
@@ -25,6 +28,7 @@ type Config struct {
 	HttpPort int    `json:"http_port"`
 	Duration int    `json:"duration"`
 	PGSQL    PGSQL  `json:"pgsql"`
+	Redis    Redis  `json:"redis"        required:"true"`
 	MQ       MQ     `json:"mq"`
 	GitLab   GitLab `json:"gitlab"`
 }
@@ -37,10 +41,31 @@ type PGSQL struct {
 	Password string `json:"password"`
 }
 
+type Redis struct {
+	DB redis.Config `json:"db" required:"true"`
+}
+
 type MQ struct {
 	Address  string `json:"address"`
+	Version  string `json:"version" required:"true"`
 	MaxRetry int    `json:"max_retry"`
 	Topics   `json:"topics"`
+}
+
+func (cfg *Config) GetKfkConfig() kfklib.Config {
+	return kfklib.Config{
+		Address: cfg.MQ.Address,
+		Version: cfg.MQ.Version,
+	}
+}
+
+func (cfg *Config) GetRedisConfig() redislib.Config {
+	return redislib.Config{
+		Address:  cfg.Redis.DB.Address,
+		Password: cfg.Redis.DB.Password,
+		DB:       cfg.Redis.DB.DB,
+		Timeout:  cfg.Redis.DB.Timeout,
+	}
 }
 
 type GitLab struct {
@@ -67,12 +92,6 @@ type Topics struct {
 	Cloud           string `json:"cloud"            required:"true"`
 	Async           string `json:"async"            required:"true"`
 	BigModel        string `json:"bigmodel"         required:"true"`
-}
-
-func (cfg *Config) GetMQConfig() mq.MQConfig {
-	return mq.MQConfig{
-		Addresses: cfg.MQ.ParseAddress(),
-	}
 }
 
 func (cfg *MQ) Validate() error {

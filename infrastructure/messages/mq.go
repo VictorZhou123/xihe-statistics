@@ -7,9 +7,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/opensourceways/community-robot-lib/kafka"
-	"github.com/opensourceways/community-robot-lib/mq"
 	"github.com/sirupsen/logrus"
+
+	kfklib "github.com/opensourceways/kafka-lib/agent"
+	kfkmq "github.com/opensourceways/kafka-lib/mq"
+	redislib "github.com/opensourceways/redis-lib"
 
 	"project/xihe-statistics/app"
 	"project/xihe-statistics/config"
@@ -17,24 +19,26 @@ import (
 	"project/xihe-statistics/infrastructure/repositories"
 )
 
-func Init(cfg mq.MQConfig, log *logrus.Entry, topic config.Topics) error {
+const (
+	kfkQueueName = "xihe-kafka-queue"
+)
+
+func InitKfkLib(kfkCfg kfklib.Config, redisCfg redislib.Config, log kfkmq.Logger, topic config.Topics) (err error) {
 	topics = topic
 
-	err := kafka.Init(
-		mq.Addresses(cfg.Addresses...),
-		mq.Log(log),
-	)
-	if err != nil {
-		return err
+	if err = redislib.Init(&redisCfg); err != nil {
+		return
 	}
 
-	return kafka.Connect()
+	if err = kfklib.Init(&kfkCfg, log, redislib.DAO(), kfkQueueName); err != nil {
+		return
+	}
+
+	return
 }
 
-func Exit(log *logrus.Entry) {
-	if err := kafka.Disconnect(); err != nil {
-		log.Errorf("exit kafka, err:%v", err)
-	}
+func KfkLibExit() {
+	kfklib.Exit()
 }
 
 func NewHandler(cfg *config.Config, log *logrus.Entry) *Handler {
