@@ -7,16 +7,19 @@ import (
 	"net/http"
 	"project/xihe-statistics/config"
 	"project/xihe-statistics/domain/platform"
+	"project/xihe-statistics/utils"
 
-	"github.com/opensourceways/community-robot-lib/utils"
+	libutils "github.com/opensourceways/community-robot-lib/utils"
 )
 
 func NewGitlabStatistics(cfg *config.Config) platform.PlatForm {
+	defer utils.ClearStringMemory(cfg.GitLab.RootToken)
+
 	return &gitlabStatistics{
 		token:        cfg.GitLab.RootToken,
 		endpoint:     cfg.GitLab.Endponit,
 		countPerPage: 50,
-		cli:          utils.NewHttpClient(3),
+		cli:          libutils.NewHttpClient(3),
 	}
 }
 
@@ -24,7 +27,7 @@ type gitlabStatistics struct {
 	token        string
 	endpoint     string
 	countPerPage int
-	cli          utils.HttpClient
+	cli          libutils.HttpClient
 }
 
 func (impl *gitlabStatistics) GetProjectId(pageNum int) ([]platform.ProjectId, error) {
@@ -41,7 +44,7 @@ func (impl *gitlabStatistics) GetCloneTotal(id int) (total platform.CloneTotal, 
 
 func (impl *gitlabStatistics) getProjectId(pageNum int) (resp []platform.ProjectId, err error) {
 	url := fmt.Sprintf("%s/projects/?simple=true&per_page=%d&page=%d", impl.endpoint, impl.countPerPage, pageNum)
-	req, err := impl.newRequest(impl.token, url, "GET", nil)
+	req, err := impl.newRequest(string(impl.token), url, "GET", nil)
 	if err != nil {
 		return
 	}
@@ -56,7 +59,7 @@ func (impl *gitlabStatistics) getProjectId(pageNum int) (resp []platform.Project
 
 func (impl *gitlabStatistics) getCloneTotal(id int) (resp cloneTotalResult, err error) {
 	url := fmt.Sprintf("%s/projects/%d/statistics", impl.endpoint, id)
-	req, err := impl.newRequest(impl.token, url, "GET", nil)
+	req, err := impl.newRequest(string(impl.token), url, "GET", nil)
 	if err != nil {
 		return
 	}
@@ -75,7 +78,7 @@ func (impl *gitlabStatistics) newRequest(
 	var body io.Reader
 
 	if param != nil {
-		v, err := utils.JsonMarshal(param)
+		v, err := libutils.JsonMarshal(param)
 		if err != nil {
 			return nil, err
 		}

@@ -44,7 +44,7 @@ func Do(h *Handler) error {
 }
 
 func Run(h *Handler, log *logrus.Entry, cfg *config.Config) {
-	ticker := time.NewTicker(time.Second * 86400)	// TODO: check config reading
+	ticker := time.NewTicker(time.Second * 86400) // TODO: check config reading
 	defer ticker.Stop()
 
 	// to excute Do at function Run started
