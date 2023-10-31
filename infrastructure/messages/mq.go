@@ -26,7 +26,7 @@ func Exit(log *logrus.Entry) {
 	kfklib.Exit()
 }
 
-func NewHandler(cfg *config.Config, log *logrus.Entry) *Handler {
+func NewHandler(log *logrus.Entry) *Handler {
 
 	bigModelRecord := repositories.NewBigModelRecordRepository(
 		// infrastructure.mongodb -> infrastructure.repositories (mapper)

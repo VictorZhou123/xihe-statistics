@@ -92,7 +92,7 @@ func main() {
 	defer messages.Exit(log)
 
 	// mq
-	go messages.Run(messages.NewHandler(cfg, log), log)
+	go messages.Run(messages.NewHandler(log), log)
 
 	// gitlab statisitc
 	go gitlab.Run(gitlab.NewHandler(cfg, log), log, cfg)
