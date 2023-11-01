@@ -9,7 +9,7 @@ var (
 		"vqa", "gen_picture",
 		"desc_picture", "luojia", "pangu",
 		"codegeex", "wukong", "ai_detector",
-		"baichuan", "glm2",
+		"baichuan", "glm2", "llama2",
 	}
 )
 
